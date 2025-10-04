@@ -13,10 +13,3 @@ export class UserDtoCreate {
   @IsNotEmpty()
   name: string
 }
-
-export interface User {
-  id: string;
-  email: string;
-  password: string;
-  name: string
-}
