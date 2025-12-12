@@ -23,4 +23,10 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   synchronize: process.env.DB_SYNCHRONIZE === 'true',
   logging: process.env.DB_LOGGING === 'true',
+  extra: {
+    // Configuración específica para PostgreSQL
+    timezone: 'UTC',
+    // Forzar que las fechas se interpreten como UTC
+    parseInputDatesAsUTC: true,
+  },
 };

@@ -1,81 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import path from 'path';
-import * as fs from 'fs';
-import { v4 as uuid } from 'uuid';
-import { Message } from './dto/message.dto';
 import { WskService } from 'src/wsk/wsk.service';
+import { UserService } from '../user/user.service';
+import { Message } from './message.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreateMessageDto } from './dto/message.dto';
+import { ChannelService } from '../channel/channel.service';
 
 @Injectable()
 export class MessageService {
 
-    // private readonly dbPathGeneral = path.resolve(__dirname, '../../db/general.json');
+    constructor(
+      @InjectRepository(Message)
+      private readonly messageRepository: Repository<Message>,
+      private readonly usersService: UserService,
+      private readonly wskService: WskService,
+      private readonly channelsService: ChannelService,
+    ) {}
 
-    // constructor(
-    //   private readonly usersService: UserService,
-    //   private readonly wskService: WskService,
-    // ) {
-    //   if (!fs.existsSync(this.dbPathGeneral)) {
-    //     fs.writeFileSync(this.dbPathGeneral, JSON.stringify([], null, 2));
-    //   }
-    // }
-
-    // private readMessagesGeneral(): Message[] {
-    //   const data = fs.readFileSync(this.dbPathGeneral, 'utf8');
-    //   return JSON.parse(data);
-    // }
+  async createMessage(message: CreateMessageDto) {
+    const user = await this.usersService.getById(message.senderId);
     
-    // private writeMessagesGeneral(message: Message[]): void {
-    //   fs.writeFileSync(this.dbPathGeneral, JSON.stringify(message, null, 2));
-    // }
-    
-    // async sendMessage(content: string, senderId: string, channelId: string): Promise<Message[]> {
-    //   const messages = this.readMessagesGeneral();
+    const channel = await this.channelsService.getChannelById(message.channelId);
 
-    //   const sender = await this.usersService.getById(senderId);
+    const payload: Partial<Message> = {
+      content: message.content,
+      user,
+      channel,
+    };  
 
-    //   const newmessage: Message = {
-    //     id: uuid(),
-    //     content,
-    //     senderId,
-    //     senderName: sender.name, 
-    //     timestamp: new Date(),
-    //     channelId,
-    //     channelName: 'Placeholder Channel',
-    //   };
+    const newMessage = this.messageRepository.create({
+      ...payload,
+    });
 
-    //   messages.push(newmessage);
-    //   this.writeMessagesGeneral(messages);
+    return this.messageRepository.save(newMessage);
+  }
 
-    //   this.wskService.notifyRoom({ roomId: channelId, message: content, userId: senderId });
+  async getMessagesByChannel(channelId: string, page: number, limit: number) {
+    return this.messageRepository.find({ where: { channel: { id: channelId } }, skip: (page - 1) * limit, take: limit, relations: ['user', 'channel'] });
+  }
 
-    //   return messages;
-    // }
-
-    // async sendMessageGeneral(content: string, senderId: string, channelId: string): Promise<Message[]> {
-    //   const messages = this.readMessagesGeneral();
-
-    //   const sender = await this.usersService.getById(senderId);
-
-    //   const newmessage: Message = {
-    //     id: uuid(),
-    //     content,
-    //     senderId,
-    //     senderName: sender.name, 
-    //     timestamp: new Date(),
-    //     channelId: 'general',
-    //     channelName: 'Placeholder Channel',
-    //   };
-
-    //   messages.push(newmessage);
-    //   this.writeMessagesGeneral(messages);
-
-    //   this.wskService.notifyAll({ message: content, userId: senderId });
-
-    //   return messages;
-    // }
-
-    // async getGeneralMessages(): Promise<Message[]> {
-    //   const messages = this.readMessagesGeneral();
-    //   return messages
-    // }
 }

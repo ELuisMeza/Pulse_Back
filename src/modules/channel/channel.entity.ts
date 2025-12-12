@@ -18,6 +18,12 @@ export class Channel {
 
   @Column({ type: 'enum', enum: EnumRecordsType })
   state: EnumRecordsType;
+
+  @Column({ name: 'user_creator' })
+  userCreator: string;
+
+  @Column({ type: 'boolean', name: 'is_global', default: false })
+  isGlobal: boolean;
   
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_creator' })

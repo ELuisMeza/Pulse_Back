@@ -1,5 +1,6 @@
 import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -10,6 +11,7 @@ export class User {
   email: string;
 
   @Column({ type: 'text', select: false })
+  @Exclude()
   password: string;
 
   @Column({ type: 'varchar', length: 255 })

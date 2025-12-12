@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
 
 @Injectable()
 export class UserService {
@@ -32,9 +33,10 @@ export class UserService {
       name
     });
 
-    await this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
 
-    return newUser;
+    // Consultar el usuario recién creado sin el password (select: false se aplica aquí)
+    return await this.userRepository.findOne({ where: { id: savedUser.id } }) as User;
   }
 
   async getByEmail(email: string): Promise<User> {
@@ -47,13 +49,28 @@ export class UserService {
     return users;
   }
 
+  // Método específico para autenticación que SÍ incluye el password
+  async getByEmailWithPassword(email: string): Promise<User> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email = :email', { email })
+      .addSelect('user.password')
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
   async getAllUsers(): Promise<User[]> {
     const users = await this.userRepository.find();
     return users;
   }
 
   async getById(id: string): Promise<User> {
-    const users = await this.userRepository.findOne({ where: { id } });
+    const users = await this.userRepository.findOne({ where: { id , state: EnumRecordsType.ACTIVE } });
     const user = users;
 
     if (!user) {

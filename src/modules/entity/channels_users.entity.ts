@@ -12,7 +12,7 @@ export class ChannelsUsers {
   @PrimaryColumn('uuid')
   user_id: string;
 
-  @CreateDateColumn({ name: 'joined_at' })
+  @CreateDateColumn({ name: 'joined_at', default: () => 'CURRENT_TIMESTAMP' })
   joinedAt: Date;
 
   @ManyToOne(() => Channel, { onDelete: 'CASCADE' })
