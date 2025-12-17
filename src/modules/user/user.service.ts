@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
@@ -64,9 +64,30 @@ export class UserService {
     return user;
   }
 
-  async getAllUsers(): Promise<User[]> {
-    const users = await this.userRepository.find();
-    return users;
+  async getAllUsers(page: number = 1, limit: number = 10, search?: string ): Promise<{ data: User[], page: number, limit: number, total: number, totalPages: number }> {
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .where('user.state = :state', { state: EnumRecordsType.ACTIVE });
+
+    if (search) {
+      queryBuilder.andWhere('user.name LIKE :search', { search: `%${search}%` });
+    }
+
+    queryBuilder.orderBy('user.created_at', 'DESC');
+
+    const total = await queryBuilder.getCount();
+
+    const users = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return {
+      data: users,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async getById(id: string): Promise<User> {
