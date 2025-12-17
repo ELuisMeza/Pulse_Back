@@ -172,7 +172,7 @@ export class ChannelService {
 
     await this.addUserToChannel(savedChannel.id, userId);
 
-    return savedChannel;
+    return {...savedChannel, total_members: 1};
   }
 
   async addUserToChannel(channelId: string, userId: string) {

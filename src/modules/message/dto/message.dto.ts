@@ -7,9 +7,5 @@ export class CreateMessageDto {
 
   @IsString()
   @IsNotEmpty()
-  senderId: string;
-
-  @IsString()
-  @IsNotEmpty()
   channelId: string;
 }

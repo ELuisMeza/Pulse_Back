@@ -18,9 +18,9 @@ export class MessageService {
       private readonly channelsService: ChannelService,
     ) {}
 
-  async createMessage(message: CreateMessageDto) {
-    const user = await this.usersService.getById(message.senderId);
-    
+  async createMessage(message: CreateMessageDto, senderId: string) {
+    const user = await this.usersService.getById(senderId);
+
     const channel = await this.channelsService.getChannelById(message.channelId);
 
     const payload: Partial<Message> = {

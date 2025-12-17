@@ -1,17 +1,17 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { CreateMessageDto } from './dto/message.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 
 @Controller('message')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @Post('send')
-  async sendMessage(@Body() body: CreateMessageDto) {
-    return this.messageService.createMessage(body);
+  async sendMessage(@Body() body: CreateMessageDto, @Req() req: { user: { userId: string } }) {
+    return this.messageService.createMessage(body, req.user.userId);
   }
 
   @Get('by-channel/:channelId/:page/:limit')
