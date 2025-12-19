@@ -2,6 +2,8 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from "socket.io";
 import { UseGuards } from "@nestjs/common";
 import { WsJwtGuard } from "../modules/auth/ws-jwt.guard";
+import { JwtService } from "@nestjs/jwt";
+import { MessageDto } from "src/modules/message/dto/message.dto";
 
 @WebSocketGateway({
     cors: true
@@ -10,6 +12,27 @@ import { WsJwtGuard } from "../modules/auth/ws-jwt.guard";
 export class WskGateway {
     @WebSocketServer()
     server: Server
+
+    constructor(private jwtService: JwtService) {}
+
+    afterInit(server: Server) {
+        server.use(async (socket, next) => {
+        try {
+            const token = socket.handshake.auth?.token;
+            if (!token) throw new Error('No token');
+
+            const payload = await this.jwtService.verifyAsync(token, {
+            secret: process.env.JWT_SECRET || 'superSecretKey',
+            });
+
+            socket.data.user = payload;
+            next();
+        } catch (err) {
+            next(new Error('Unauthorized'));
+        }
+        });
+    }
+
 
     handleConnection(client: Socket) {
         const user = client.data.user;
@@ -43,12 +66,9 @@ export class WskGateway {
         console.log(`Usuario ${user?.email || user?.sub} salió de la sala ${data.room}`)
     }
 
-    notifyNewMessageGeneral(payload: { message: string; userId: string }) {
-        this.server.emit('new_message', payload);
-    }
-
-    notifyNewMessage(payload: { roomId: string; message: string; userId: string }) {
-      this.server.to(payload.roomId).emit('new_message', payload);
+    notifyRoomMessage(roomId: string, payload: MessageDto) {
+        console.log(`Notificando mensaje en la sala ${roomId}:`, payload);
+        this.server.to(roomId).emit('room_message', {channelId: roomId, message: payload});
     }
 
 }

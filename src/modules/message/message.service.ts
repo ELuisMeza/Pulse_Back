@@ -4,7 +4,7 @@ import { UserService } from '../user/user.service';
 import { Message } from './message.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateMessageDto } from './dto/message.dto';
+import { CreateMessageDto, MessageDto } from './dto/message.dto';
 import { ChannelService } from '../channel/channel.service';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class MessageService {
       private readonly channelsService: ChannelService,
     ) {}
 
-  async createMessage(message: CreateMessageDto, senderId: string) {
+  async createMessage(message: CreateMessageDto, senderId: string): Promise<MessageDto> {
     const user = await this.usersService.getById(senderId);
 
     const channel = await this.channelsService.getChannelById(message.channelId);
@@ -33,11 +33,29 @@ export class MessageService {
       ...payload,
     });
 
-    return this.messageRepository.save(newMessage);
+    const savedMessage = await this.messageRepository.save(newMessage);
+    const messagePayload: MessageDto = {
+      id: savedMessage.id,
+      content: savedMessage.content,
+      senderId: savedMessage.user.id,
+      senderName: savedMessage.user.name,
+      timestamp: savedMessage.createdAt
+    };
+
+    this.wskService.notifyRoom(channel.id, messagePayload)
+
+    return messagePayload;
   }
 
-  async getMessagesByChannel(channelId: string, page: number, limit: number) {
-    return this.messageRepository.find({ where: { channel: { id: channelId } }, skip: (page - 1) * limit, take: limit, relations: ['user', 'channel'] });
+  async getMessagesByChannel(channelId: string, page: number, limit: number): Promise<MessageDto[]> {
+    const messages = await this.messageRepository.find({ where: { channel: { id: channelId } }, skip: (page - 1) * limit, take: limit, relations: ['user', 'channel'] });
+    return messages.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      senderId: msg.user.id,
+      senderName: msg.user.name,
+      timestamp: msg.createdAt
+    }));
   }
 
 }
