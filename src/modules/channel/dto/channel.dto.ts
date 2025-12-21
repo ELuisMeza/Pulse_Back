@@ -28,3 +28,13 @@ export interface ChannelDto {
   total_members: string;
   is_global: boolean;
 }
+
+export interface ChannelQueryFilters {
+  isGlobal?: boolean;
+  channelId?: string;
+  excludeUserId?: string;
+  creatorId?: string;
+  search?: string;
+  userId?: string; // Para filtros que parten de channels_users
+  excludeCreatorId?: string; // Para excluir canales donde el usuario es el creador
+}

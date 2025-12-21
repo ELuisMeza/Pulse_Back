@@ -88,13 +88,13 @@ npm run migration:run
 
 Este comando aplicará todas las migraciones incluidas en el proyecto para crear la estructura completa de la base de datos.
 
-6. (Opcional) Ejecuta el seed para poblar la base de datos con datos de ejemplo:
+6. Ejecuta el seed para crear los datos iniciales (enums, usuario admin y canal global):
 
 ```bash
 npm run seed
 ```
 
-**Nota:** El seed elimina todos los datos existentes. Úsalo solo en desarrollo.
+**Nota:** El seed crea los tipos enumerados (enums), un usuario administrador y un canal global, que son obligatorios para el funcionamiento de la aplicación. Es seguro ejecutarlo múltiples veces.
 
 ## Migraciones de Base de Datos
 
@@ -121,11 +121,11 @@ Para configurar la base de datos por primera vez, ejecuta los siguientes comando
 # 1. Ejecutar las migraciones para crear todas las tablas
 npm run migration:run
 
-# 2. (Opcional) Ejecutar el seed para poblar con datos de ejemplo
+# 2. Ejecutar el seed para crear los datos iniciales (enums, usuario admin y canal global)
 npm run seed
 ```
 
-Esto creará toda la estructura de la base de datos y, opcionalmente, la poblará con datos de ejemplo para desarrollo.
+Esto creará toda la estructura de la base de datos, los tipos enumerados (enums), el usuario administrador y el canal global necesarios para el funcionamiento de la aplicación.
 
 ### Comandos de Migración
 
@@ -185,7 +185,7 @@ npm run migration:generate src/migrations/NombreDeTuMigracion
    # Ejecuta todas las migraciones (ya están creadas en el proyecto)
    npm run migration:run
    
-   # (Opcional) Ejecuta el seed para datos de ejemplo
+   # Ejecuta el seed para crear datos iniciales (enums, admin, canal global) - obligatorio
    npm run seed
    ```
 
@@ -239,51 +239,54 @@ export class NombreMigracion1234567890 implements MigrationInterface {
 - **Haz backups** de la base de datos antes de ejecutar migraciones en producción.
 - **Mantén `DB_SYNCHRONIZE=false`** en producción. Usa migraciones para todos los cambios de esquema.
 
-## Seed (Poblado de Datos)
+## Seed (Inicialización de Datos)
 
-El proyecto incluye un script de seed que crea automáticamente datos de ejemplo para facilitar el desarrollo y las pruebas. El seed se encuentra en `src/seeds/seed.ts`.
+El proyecto incluye un script de seed que crea automáticamente los datos iniciales necesarios para el funcionamiento de la aplicación. El seed se encuentra en `src/seeds/seed.ts` y **es obligatorio ejecutarlo** para el correcto funcionamiento de la aplicación.
 
 ### ¿Qué crea el seed?
 
 El seed crea automáticamente:
 
-1. **8 Usuarios de ejemplo:**
-   - `admin@example.com` - Administrador (ACTIVE)
-   - `juan@example.com` - Juan Pérez (ACTIVE)
-   - `maria@example.com` - María García (ACTIVE)
-   - `carlos@example.com` - Carlos López (ACTIVE)
-   - `ana@example.com` - Ana Martínez (ACTIVE)
-   - `luis@example.com` - Luis Rodríguez (ACTIVE)
-   - `sofia@example.com` - Sofía Hernández (ACTIVE)
-   - `diego@example.com` - Diego Fernández (INACTIVE)
+1. **Enum records_type**: Tipo enumerado en PostgreSQL con los valores:
+   - `ACTIVE` - Registro activo
+   - `INACTIVE` - Registro inactivo
+   - `DELETED` - Registro eliminado
 
-   **Todas las contraseñas son:** `password123`
+2. **Usuario Administrador**:
+   - Email: `admin@example.com`
+   - Password: `admin123`
+   - Nombre: `Administrador`
+   - Estado: `ACTIVE`
 
-2. **6 Canales:**
-   - **General** (global) - Canal público para todos
-   - **Desarrollo** (global) - Canal público para el equipo de desarrollo
-   - **Soporte** (privado) - Canal privado para el equipo de soporte
-   - **Marketing** (privado) - Canal privado para marketing
-   - **Ventas** (privado) - Canal privado para ventas
-   - **Recursos Humanos** (privado) - Canal privado para RRHH
+3. **Canal Global "General"**:
+   - Nombre: `General`
+   - Tipo: Global (accesible para todos los usuarios)
+   - Creador: Usuario administrador
+   - Estado: `ACTIVE`
 
-3. **Relaciones usuarios-canales:**
-   - Todos los usuarios activos están en los canales globales
-   - Usuarios específicos asignados a canales privados según su rol
-
-4. **Mensajes de ejemplo:**
-   - Mensajes de bienvenida y conversaciones de ejemplo en cada canal
-   - Mensajes con fechas distribuidas en los últimos 7 días
+4. **Relación Admin-Canal**:
+   - El usuario administrador es agregado automáticamente al canal global "General"
 
 ### Ejecutar el Seed
 
-Para ejecutar el seed y poblar la base de datos con datos de ejemplo:
+Para ejecutar el seed y crear los datos iniciales:
 
 ```bash
 npm run seed
 ```
 
-**⚠️ Advertencia:** El seed **elimina todos los datos existentes** antes de insertar los nuevos. Úsalo solo en entornos de desarrollo o cuando quieras resetear la base de datos.
+El seed verifica si los datos ya existen antes de crearlos (usando `ON CONFLICT DO NOTHING`), por lo que es seguro ejecutarlo múltiples veces sin duplicar información.
+
+### Credenciales del Usuario Admin
+
+Después de ejecutar el seed, puedes usar estas credenciales para iniciar sesión:
+
+```
+Email: admin@example.com
+Password: admin123
+```
+
+**⚠️ Importante:** Cambia la contraseña del usuario admin después del primer inicio de sesión en producción.
 
 ### Flujo Completo de Setup
 
@@ -300,33 +303,14 @@ cp .env.example .env
 # 3. Crear la base de datos
 createdb social
 
-# 4. Ejecutar migraciones
+# 4. Ejecutar migraciones (crea las tablas)
 npm run migration:run
 
-# 5. Ejecutar seed (opcional, solo para desarrollo)
+# 5. Ejecutar seed (crea enums, usuario admin y canal global)
 npm run seed
 ```
 
-### Personalizar el Seed
-
-Si quieres modificar los datos que se crean, edita el archivo `src/seeds/seed.ts`. Puedes:
-
-- Agregar más usuarios
-- Crear más canales
-- Modificar las relaciones entre usuarios y canales
-- Agregar más mensajes de ejemplo
-- Cambiar las contraseñas por defecto
-
-### Credenciales de Prueba
-
-Después de ejecutar el seed, puedes usar estas credenciales para iniciar sesión:
-
-```
-Email: admin@example.com
-Password: password123
-```
-
-O cualquier otro usuario del seed con la misma contraseña: `password123`
+**Importante:** Tanto las migraciones como el seed son **obligatorios** para el funcionamiento de la aplicación. Las migraciones crean la estructura de las tablas y el seed crea los enums, el usuario administrador y el canal global inicial.
 
 ## Variables de Entorno
 

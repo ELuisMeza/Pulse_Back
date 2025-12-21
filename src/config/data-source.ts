@@ -2,6 +2,9 @@ import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
+// Registrar tsconfig-paths para resolver rutas con baseUrl
+import 'tsconfig-paths/register';
+
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const AppDataSource = new DataSource({

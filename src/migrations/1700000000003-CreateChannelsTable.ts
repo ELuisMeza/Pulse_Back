@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner, Table, ForeignKey } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateChannelsTable1700000000003 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -53,15 +53,13 @@ export class CreateChannelsTable1700000000003 implements MigrationInterface {
     `);
 
     // Crear foreign key hacia users
-    await queryRunner.createForeignKey(
-      'channels',
-      new ForeignKey({
-        columnNames: ['user_creator'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'users',
-        onDelete: 'CASCADE',
-      }),
-    );
+    await queryRunner.query(`
+      ALTER TABLE "channels" 
+      ADD CONSTRAINT "FK_channels_user_creator" 
+      FOREIGN KEY ("user_creator") 
+      REFERENCES "users"("id") 
+      ON DELETE CASCADE
+    `);
 
     // Crear índice para user_creator
     await queryRunner.query(`
