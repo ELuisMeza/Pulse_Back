@@ -54,7 +54,7 @@ export class ChannelController {
     @Body() body: AddUserToChannel,
     @Req() req: { user: { userId: string } }
   ){
-    return this.channelService.addUserToChannel(body.channelId, req.user.userId)
+    return this.channelService.addUserToChannel(body.channelId, req.user.userId) 
   }
 
   @Post('leave-to-channel')

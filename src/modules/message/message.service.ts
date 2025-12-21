@@ -42,7 +42,7 @@ export class MessageService {
       timestamp: savedMessage.createdAt
     };
 
-    this.wskService.notifyRoom(channel.id, messagePayload)
+    this.wskService.notifyRoomNewMessage(channel.id, messagePayload)
 
     return messagePayload;
   }

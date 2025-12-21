@@ -4,6 +4,7 @@ import { UseGuards } from "@nestjs/common";
 import { WsJwtGuard } from "../modules/auth/ws-jwt.guard";
 import { JwtService } from "@nestjs/jwt";
 import { MessageDto } from "src/modules/message/dto/message.dto";
+import { ChannelDto } from "src/modules/channel/dto/channel.dto";
 
 @WebSocketGateway({
     cors: true
@@ -69,6 +70,11 @@ export class WskGateway {
     notifyRoomMessage(roomId: string, payload: MessageDto) {
         console.log(`Notificando mensaje en la sala ${roomId}:`, payload);
         this.server.to(roomId).emit('room_message', {channelId: roomId, message: payload});
+    }
+
+    notifyRoomUpdate(roomId: string, payload: ChannelDto) {
+        console.log(`Notificando mensaje en la sala ${roomId}:`, payload);
+        this.server.to(roomId).emit('room_update', payload);
     }
 
 }

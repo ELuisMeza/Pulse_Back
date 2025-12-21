@@ -1,14 +1,9 @@
 import { IsNotEmpty, IsString } from "class-validator";
-import { Channel } from "../channel.entity";
 
 export class CreateChannel {
   @IsString()
   @IsNotEmpty()
   name: string;
-}
-
-export interface ChannelDetails extends Channel {
-  totalMembers: number
 }
 
 export class AddUserToChannel {
@@ -22,3 +17,14 @@ export class LeaveUserToChannel extends AddUserToChannel {
   @IsNotEmpty()
   userId: string;
 } 
+
+export interface ChannelDto {
+  id:            string;
+  name:          string;
+  created_at:    Date;
+  modified_at:   Date;
+  user_creator:  string;
+  state:         string;
+  total_members: string;
+  is_global: boolean;
+}

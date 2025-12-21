@@ -1,12 +1,10 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import * as path from 'path';
-import * as fs from 'fs';
 import * as bcrypt from 'bcryptjs';
-import { v4 as uuid } from 'uuid';
-import { Like, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
+import { ChannelService } from '../channel/channel.service';
 
 @Injectable()
 export class UserService {
@@ -14,6 +12,7 @@ export class UserService {
     constructor(
       @InjectRepository(User)
       private readonly userRepository: Repository<User>,
+      private readonly channelService: ChannelService,
     ) {
     }
 
@@ -34,6 +33,11 @@ export class UserService {
     });
 
     const savedUser = await this.userRepository.save(newUser);
+
+    const globalChannels = await this.channelService.getAllGlobalChannels();
+    for (const channel of globalChannels) {
+      await this.channelService.addUserToChannel(channel.id, savedUser.id);
+    }
 
     // Consultar el usuario recién creado sin el password (select: false se aplica aquí)
     return await this.userRepository.findOne({ where: { id: savedUser.id } }) as User;
