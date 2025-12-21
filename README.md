@@ -80,15 +80,25 @@ CREATE DATABASE social;
 \q
 ```
 
-5. Ejecuta las migraciones para crear las tablas:
+5. Ejecuta las migraciones para crear las tablas (las migraciones ya están creadas en el proyecto):
 
 ```bash
 npm run migration:run
 ```
 
+Este comando aplicará todas las migraciones incluidas en el proyecto para crear la estructura completa de la base de datos.
+
+6. (Opcional) Ejecuta el seed para poblar la base de datos con datos de ejemplo:
+
+```bash
+npm run seed
+```
+
+**Nota:** El seed elimina todos los datos existentes. Úsalo solo en desarrollo.
+
 ## Migraciones de Base de Datos
 
-El proyecto utiliza TypeORM para gestionar las migraciones de la base de datos. Las migraciones se encuentran en la carpeta `src/migrations/`.
+El proyecto utiliza TypeORM para gestionar las migraciones de la base de datos. Las migraciones ya están creadas y se encuentran en la carpeta `src/migrations/`.
 
 ### Migraciones Incluidas
 
@@ -100,6 +110,22 @@ El proyecto incluye las siguientes migraciones que crean toda la estructura de l
 4. **CreateChannelsTable**: Crea la tabla `channels` con relación al usuario creador
 5. **CreateMessagesTable**: Crea la tabla `messages` con relaciones a channels y users
 6. **CreateChannelsUsersTable**: Crea la tabla de relación many-to-many entre channels y users
+
+**Importante:** Las migraciones ya están creadas. Solo necesitas ejecutarlas para crear la estructura de la base de datos.
+
+### Configuración Inicial de la Base de Datos
+
+Para configurar la base de datos por primera vez, ejecuta los siguientes comandos en orden:
+
+```bash
+# 1. Ejecutar las migraciones para crear todas las tablas
+npm run migration:run
+
+# 2. (Opcional) Ejecutar el seed para poblar con datos de ejemplo
+npm run seed
+```
+
+Esto creará toda la estructura de la base de datos y, opcionalmente, la poblará con datos de ejemplo para desarrollo.
 
 ### Comandos de Migración
 
@@ -156,8 +182,11 @@ npm run migration:generate src/migrations/NombreDeTuMigracion
    # Crea la base de datos
    createdb social
    
-   # Ejecuta todas las migraciones
+   # Ejecuta todas las migraciones (ya están creadas en el proyecto)
    npm run migration:run
+   
+   # (Opcional) Ejecuta el seed para datos de ejemplo
+   npm run seed
    ```
 
 2. **Desarrollo (cuando cambias entidades):**
@@ -176,6 +205,8 @@ npm run migration:generate src/migrations/NombreDeTuMigracion
    # Asegúrate de tener DB_SYNCHRONIZE=false en .env
    # Ejecuta las migraciones pendientes
    npm run migration:run
+   
+   # NO ejecutes el seed en producción
    ```
 
 ### Estructura de las Migraciones
@@ -207,6 +238,95 @@ export class NombreMigracion1234567890 implements MigrationInterface {
 - **Siempre prueba las migraciones** en un entorno de desarrollo antes de aplicarlas en producción.
 - **Haz backups** de la base de datos antes de ejecutar migraciones en producción.
 - **Mantén `DB_SYNCHRONIZE=false`** en producción. Usa migraciones para todos los cambios de esquema.
+
+## Seed (Poblado de Datos)
+
+El proyecto incluye un script de seed que crea automáticamente datos de ejemplo para facilitar el desarrollo y las pruebas. El seed se encuentra en `src/seeds/seed.ts`.
+
+### ¿Qué crea el seed?
+
+El seed crea automáticamente:
+
+1. **8 Usuarios de ejemplo:**
+   - `admin@example.com` - Administrador (ACTIVE)
+   - `juan@example.com` - Juan Pérez (ACTIVE)
+   - `maria@example.com` - María García (ACTIVE)
+   - `carlos@example.com` - Carlos López (ACTIVE)
+   - `ana@example.com` - Ana Martínez (ACTIVE)
+   - `luis@example.com` - Luis Rodríguez (ACTIVE)
+   - `sofia@example.com` - Sofía Hernández (ACTIVE)
+   - `diego@example.com` - Diego Fernández (INACTIVE)
+
+   **Todas las contraseñas son:** `password123`
+
+2. **6 Canales:**
+   - **General** (global) - Canal público para todos
+   - **Desarrollo** (global) - Canal público para el equipo de desarrollo
+   - **Soporte** (privado) - Canal privado para el equipo de soporte
+   - **Marketing** (privado) - Canal privado para marketing
+   - **Ventas** (privado) - Canal privado para ventas
+   - **Recursos Humanos** (privado) - Canal privado para RRHH
+
+3. **Relaciones usuarios-canales:**
+   - Todos los usuarios activos están en los canales globales
+   - Usuarios específicos asignados a canales privados según su rol
+
+4. **Mensajes de ejemplo:**
+   - Mensajes de bienvenida y conversaciones de ejemplo en cada canal
+   - Mensajes con fechas distribuidas en los últimos 7 días
+
+### Ejecutar el Seed
+
+Para ejecutar el seed y poblar la base de datos con datos de ejemplo:
+
+```bash
+npm run seed
+```
+
+**⚠️ Advertencia:** El seed **elimina todos los datos existentes** antes de insertar los nuevos. Úsalo solo en entornos de desarrollo o cuando quieras resetear la base de datos.
+
+### Flujo Completo de Setup
+
+Para configurar el proyecto desde cero con migraciones y seed:
+
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Edita .env con tus valores
+
+# 3. Crear la base de datos
+createdb social
+
+# 4. Ejecutar migraciones
+npm run migration:run
+
+# 5. Ejecutar seed (opcional, solo para desarrollo)
+npm run seed
+```
+
+### Personalizar el Seed
+
+Si quieres modificar los datos que se crean, edita el archivo `src/seeds/seed.ts`. Puedes:
+
+- Agregar más usuarios
+- Crear más canales
+- Modificar las relaciones entre usuarios y canales
+- Agregar más mensajes de ejemplo
+- Cambiar las contraseñas por defecto
+
+### Credenciales de Prueba
+
+Después de ejecutar el seed, puedes usar estas credenciales para iniciar sesión:
+
+```
+Email: admin@example.com
+Password: password123
+```
+
+O cualquier otro usuario del seed con la misma contraseña: `password123`
 
 ## Variables de Entorno
 
