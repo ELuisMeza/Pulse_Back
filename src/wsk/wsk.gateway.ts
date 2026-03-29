@@ -8,7 +8,7 @@ import { ChannelDto } from "../modules/channel/dto/channel.dto";
 
 @WebSocketGateway({
     cors: {
-        origin: 'https://pulse-front-seven.vercel.app',
+        origin: 'https://pulse-front-seven.vercel.app, http://localhost:4200',
         credentials: true,
     },
 })
