@@ -1,4 +1,4 @@
-import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
+import { EnumRecordsType } from '../../globals/enums/records_type.enum';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../user/user.entity';
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { WskGateway } from './wsk.gateway';
-import { MessageDto } from 'src/modules/message/dto/message.dto';
-import { ChannelDto } from 'src/modules/channel/dto/channel.dto';
+import { MessageDto } from '../modules/message/dto/message.dto';
+import { ChannelDto } from '../modules/channel/dto/channel.dto';
 
 @Injectable()
 export class WskService {

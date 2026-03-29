@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChannelsUsers } from '../entity/channels_users.entity';
 import { Channel } from './channel.entity';
 import { UserModule } from '../user/user.module';
-import { WskModule } from 'src/wsk/wsk.module';
+import { WskModule } from '../../wsk/wsk.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ChannelsUsers, Channel]), forwardRef(() => UserModule), forwardRef(() => WskModule)],

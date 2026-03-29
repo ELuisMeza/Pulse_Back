@@ -3,8 +3,8 @@ import { Server, Socket } from "socket.io";
 import { UseGuards } from "@nestjs/common";
 import { WsJwtGuard } from "../modules/auth/ws-jwt.guard";
 import { JwtService } from "@nestjs/jwt";
-import { MessageDto } from "src/modules/message/dto/message.dto";
-import { ChannelDto } from "src/modules/channel/dto/channel.dto";
+import { MessageDto } from "../modules/message/dto/message.dto";
+import { ChannelDto } from "../modules/channel/dto/channel.dto";
 
 @WebSocketGateway({
     cors: true

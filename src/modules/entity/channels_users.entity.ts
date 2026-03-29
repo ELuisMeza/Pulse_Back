@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Channel } from '../channel/channel.entity';
 import { User } from '../user/user.entity';
-import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
+import { EnumRecordsType } from '../../globals/enums/records_type.enum';
 
 @Entity('channels_users')
 export class ChannelsUsers {

@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './channel.entity';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ChannelsUsers } from '../entity/channels_users.entity';
-import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
+import { EnumRecordsType } from '../../globals/enums/records_type.enum';
 import { ChannelDto, ChannelQueryFilters, CreateChannel } from './dto/channel.dto';
 import { UserService } from '../user/user.service';
-import { WskService } from 'src/wsk/wsk.service';
+import { WskService } from '../../wsk/wsk.service';
 
 @Injectable()
 export class ChannelService {

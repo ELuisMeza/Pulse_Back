@@ -3,7 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EnumRecordsType } from 'src/globals/enums/records_type.enum';
+import { EnumRecordsType } from '../../globals/enums/records_type.enum';
 import { ChannelService } from '../channel/channel.service';
 
 @Injectable()

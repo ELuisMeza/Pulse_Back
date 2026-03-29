@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { MessageController } from './message.controller';
 import { UserModule } from '../user/user.module';
-import { WskModule } from 'src/wsk/wsk.module';
+import { WskModule } from '../../wsk/wsk.module';
 import { Message } from './message.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChannelModule } from '../channel/channel.module';

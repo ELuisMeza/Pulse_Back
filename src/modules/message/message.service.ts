@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { WskService } from 'src/wsk/wsk.service';
+import { WskService } from '../../wsk/wsk.service';
 import { UserService } from '../user/user.service';
 import { Message } from './message.entity';
 import { Repository } from 'typeorm';
