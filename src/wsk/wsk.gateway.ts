@@ -7,7 +7,10 @@ import { MessageDto } from "../modules/message/dto/message.dto";
 import { ChannelDto } from "../modules/channel/dto/channel.dto";
 
 @WebSocketGateway({
-    cors: true
+    cors: {
+        origin: 'https://pulse-front-seven.vercel.app',
+        credentials: true,
+    },
 })
 @UseGuards(WsJwtGuard)
 export class WskGateway {
