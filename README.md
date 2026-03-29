@@ -39,7 +39,7 @@ Antes de comenzar, asegúrate de tener instalado:
 
 - [Node.js](https://nodejs.org/) (versión 18 o superior)
 - [npm](https://www.npmjs.com/) o [yarn](https://yarnpkg.com/)
-- [PostgreSQL](https://www.postgresql.org/) (versión 12 o superior)
+- Un proyecto **PostgreSQL en la nube** (esta rama usa [Neon](https://neon.tech/) con Vercel u otro host compatible; necesitas `DATABASE_URL` del panel)
 - Git
 
 ## Instalación
@@ -65,20 +65,12 @@ Copia el archivo `.env.example` a `.env`:
 cp .env.example .env
 ```
 
-Edita el archivo `.env` con tus valores de configuración (ver sección de Variables de Entorno).
+Edita el archivo `.env` con tus valores de configuración (ver sección [Variables de Entorno](#variables-de-entorno)).
 
-4. Crea la base de datos en PostgreSQL:
-
-```bash
-# Conecta a PostgreSQL
-psql -U postgres
-
-# Crea la base de datos
-CREATE DATABASE social;
-
-# Sal de psql
-\q
-```
+4. Crea el proyecto en **Neon** (o conecta Postgres desde Vercel) y copia las URLs en `.env`:  
+   - **`DATABASE_URL`**: endpoint con **pooler** (PgBouncer), para la API en ejecución.  
+   - **`DATABASE_URL_UNPOOLED`**: conexión **directa** al mismo cluster; obligatoria para migraciones y `seed` (el pooler no es adecuado para esos comandos).  
+   La base de datos ya existe en el panel; no hace falta crearla en tu máquina.
 
 5. Ejecuta las migraciones para crear las tablas (las migraciones ya están creadas en el proyecto):
 
@@ -179,13 +171,9 @@ npm run migration:generate src/migrations/NombreDeTuMigracion
 
 1. **Primera vez (setup inicial):**
    ```bash
-   # Crea la base de datos
-   createdb social
-   
-   # Ejecuta todas las migraciones (ya están creadas en el proyecto)
+   # .env con DATABASE_URL y DATABASE_URL_UNPOOLED (Neon / Vercel)
+
    npm run migration:run
-   
-   # Ejecuta el seed para crear datos iniciales (enums, admin, canal global) - obligatorio
    npm run seed
    ```
 
@@ -238,6 +226,7 @@ export class NombreMigracion1234567890 implements MigrationInterface {
 - **Siempre prueba las migraciones** en un entorno de desarrollo antes de aplicarlas en producción.
 - **Haz backups** de la base de datos antes de ejecutar migraciones en producción.
 - **Mantén `DB_SYNCHRONIZE=false`** en producción. Usa migraciones para todos los cambios de esquema.
+- Configura siempre **`DATABASE_URL_UNPOOLED`** en `.env` para `npm run migration:*` y `npm run seed` (el `DataSource` de migraciones la usa en lugar del pooler).
 
 ## Seed (Inicialización de Datos)
 
@@ -298,15 +287,12 @@ npm install
 
 # 2. Configurar variables de entorno
 cp .env.example .env
-# Edita .env con tus valores
+# Edita .env con DATABASE_URL y DATABASE_URL_UNPOOLED desde Neon / Vercel
 
-# 3. Crear la base de datos
-createdb social
-
-# 4. Ejecutar migraciones (crea las tablas)
+# 3. Ejecutar migraciones (crea las tablas)
 npm run migration:run
 
-# 5. Ejecutar seed (crea enums, usuario admin y canal global)
+# 4. Ejecutar seed (crea enums, usuario admin y canal global)
 npm run seed
 ```
 
@@ -314,42 +300,43 @@ npm run seed
 
 ## Variables de Entorno
 
-El proyecto requiere las siguientes variables de entorno. Puedes usar el archivo `.env.example` como referencia.
+En esta rama la base de datos es **siempre PostgreSQL en la nube** (Neon con Vercel u otro proveedor que exponga URLs de conexión). Usa `.env.example` como plantilla. La variante con PostgreSQL local está documentada en **otra rama** del repositorio.
 
-### Variables Requeridas
+### Base de datos (requeridas en esta rama)
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | URL con **pooler** (PgBouncer). Es la que debe usar la API en runtime (Vercel, servidor Node, etc.). Suele incluir `sslmode=require` (y a veces `channel_binding=require`). |
+| `DATABASE_URL_UNPOOLED` | URL **directa** al mismo cluster Neon, **sin** `-pooler` en el host. La usan migraciones y `npm run seed`; sin ella, es fácil fallar contra el pooler. |
+| `DB_SCHEMA` | Esquema de PostgreSQL (normalmente `public`). |
+
+### Aplicación (requeridas)
 
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
-| `JWT_SECRET` | Clave secreta para firmar y verificar tokens JWT | `llave_secreta` |
-| `PORT` | Puerto en el que se ejecutará la aplicación | `3000` |
-| `DB_HOST` | Dirección del servidor de PostgreSQL | `localhost` |
-| `DB_PORT` | Puerto de PostgreSQL | `5432` |
-| `DB_USERNAME` | Usuario de la base de datos | `postgres` |
-| `DB_PASSWORD` | Contraseña de la base de datos | `contraseña` |
-| `DB_NAME` | Nombre de la base de datos | `social` |
-| `DB_SCHEMA` | Esquema de la base de datos | `public` |
+| `JWT_SECRET` | Clave para firmar y verificar tokens JWT | `llave_secreta` |
+| `PORT` | Puerto HTTP de la aplicación | `3000` |
 
-### Variables Opcionales
+### Opcionales
 
-| Variable | Descripción | Valor por Defecto |
+| Variable | Descripción | Valor por defecto |
 |----------|-------------|-------------------|
-| `DB_SYNCHRONIZE` | Sincroniza automáticamente el esquema de la base de datos (solo desarrollo) | `false` |
-| `DB_LOGGING` | Habilita el logging de consultas SQL | `false` |
+| `DB_SYNCHRONIZE` | Sincroniza el esquema automáticamente (solo desarrollo; no usar en producción) | `false` |
+| `DB_LOGGING` | Log de consultas SQL de TypeORM | `false` |
 
-### Ejemplo de archivo `.env`
+### Ejemplo de `.env`
 
 ```env
 JWT_SECRET=tu_clave_secreta_muy_segura_aqui
 PORT=3000
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=tu_contraseña_segura
-DB_NAME=social
+DATABASE_URL=postgresql://USUARIO:CONTRASEÑA@HOST-POOLER.region.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL_UNPOOLED=postgresql://USUARIO:CONTRASEÑA@HOST-DIRECTO.region.aws.neon.tech/neondb?sslmode=require
 DB_SCHEMA=public
 ```
 
-**⚠️ Importante:** Nunca commitees el archivo `.env` al repositorio. El archivo `.env.example` está incluido en el repositorio como plantilla.
+En **Vercel**, copia las variables del integrador de Neon (*Settings → Environment Variables*). La app usa `DATABASE_URL` en ejecución; `migration:run` y `seed` necesitan `DATABASE_URL_UNPOOLED` en tu `.env` local o en el entorno donde ejecutes esos comandos.
+
+**⚠️ Importante:** No subas `.env` al repositorio. Rota credenciales si se filtran. `.env.example` solo contiene placeholders.
 
 ## Compilación y Ejecución
 
@@ -446,13 +433,13 @@ npm run test:e2e
 
 ### Configuración de Base de Datos
 
-La aplicación utiliza TypeORM para la gestión de la base de datos. La configuración se encuentra en `src/config/database.config.ts`.
+La aplicación utiliza TypeORM. La conexión se define en `src/config/postgres-connection.ts` y se aplica en `src/config/database.config.ts` (Nest) y `src/config/data-source.ts` (migraciones y seed).
 
-**Características:**
-- Conexión a PostgreSQL
+**Características (esta rama):**
+- PostgreSQL en la nube vía `DATABASE_URL` (pooler) para la aplicación
+- Migraciones y seed vía `DATABASE_URL_UNPOOLED` cuando está definida
 - Auto-detección de entidades
-- Configuración de timezone UTC
-- Validación de variables de entorno requeridas
+- Timezone UTC en el pool del driver
 
 ### Autenticación
 
@@ -487,7 +474,8 @@ La aplicación utiliza `class-validator` y `ValidationPipe` global para:
 ### Preparación para Producción
 
 1. **Configura las variables de entorno de producción:**
-   - Asegúrate de usar valores seguros para `JWT_SECRET` y `DB_PASSWORD`
+   - Usa un `JWT_SECRET` fuerte y único
+   - Define `DATABASE_URL` y `DATABASE_URL_UNPOOLED` desde Neon (o el proveedor equivalente) en Vercel u otro host
    - Configura `DB_SYNCHRONIZE=false` en producción
    - Configura `DB_LOGGING=false` en producción (opcional, para mejor rendimiento)
 
@@ -502,7 +490,7 @@ La aplicación utiliza `class-validator` y `ValidationPipe` global para:
 
 #### Opción 1: Despliegue Manual
 
-1. **Instala Node.js y PostgreSQL en el servidor**
+1. **Instala Node.js en el servidor** (PostgreSQL corre en Neon; no hace falta instalarlo en la máquina)
 
 2. **Clona el repositorio:**
    ```bash
@@ -518,7 +506,7 @@ La aplicación utiliza `class-validator` y `ValidationPipe` global para:
 4. **Configura las variables de entorno:**
    ```bash
    cp .env.example .env
-   # Edita .env con los valores de producción
+   # Edita .env: JWT_SECRET, DATABASE_URL, DATABASE_URL_UNPOOLED, DB_SCHEMA
    ```
 
 5. **Compila el proyecto:**
@@ -580,7 +568,7 @@ EXPOSE 3000
 CMD ["node", "dist/main.js"]
 ```
 
-Y un `docker-compose.yml`:
+Ejemplo de `docker-compose.yml` cuando la base está en **Neon** (solo la app; las URLs van en `.env`):
 
 ```yaml
 version: '3.8'
@@ -594,22 +582,6 @@ services:
       - NODE_ENV=production
     env_file:
       - .env
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: contraseña
-      POSTGRES_DB: social
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-volumes:
-  postgres_data:
 ```
 
 ### Despliegue en Plataformas Cloud
@@ -635,7 +607,7 @@ volumes:
    ```bash
    heroku config:set JWT_SECRET=tu_clave_secreta
    heroku config:set PORT=3000
-   # Las variables de DB se configuran automáticamente con el addon
+   # El addon suele exponer DATABASE_URL; esta app la usa si está definida (igual que Neon/Vercel)
    ```
 
 5. **Despliega:**
@@ -655,6 +627,12 @@ mau deploy
 1. Conecta tu repositorio a Railway
 2. Configura las variables de entorno en el dashboard
 3. Railway detectará automáticamente Node.js y desplegará
+
+#### Vercel + Neon
+
+1. Crea el proyecto en [Neon](https://neon.tech/) y enlázalo desde Vercel si usas la integración de Postgres, o pega manualmente `DATABASE_URL` y `DATABASE_URL_UNPOOLED` en Vercel → *Settings* → *Environment Variables*.
+2. Asegúrate de que en el entorno de build y de runtime exista al menos `DATABASE_URL`. Para ejecutar migraciones desde CI o tu máquina, usa el mismo `.env` o variables equivalentes, incluyendo `DATABASE_URL_UNPOOLED` cuando Neon la proporcione.
+3. Ejecuta `npm run migration:run` y, si aplica, `npm run seed` contra la base remota antes o después del primer despliegue, según tu flujo.
 
 ### Configuración de Nginx (Recomendado)
 
@@ -708,17 +686,17 @@ server {
 
 ### Error: Variables de entorno faltantes
 
-Si ves el error `Variables de entorno faltantes: ...`, asegúrate de:
-- Tener un archivo `.env` en la raíz del proyecto
-- Que todas las variables requeridas estén definidas
-- Que el archivo `.env` no tenga errores de sintaxis
+Si la app indica que faltan variables de conexión, comprueba:
+- Archivo `.env` en la raíz (o variables en Vercel / el host donde corre Node)
+- **`DATABASE_URL`** definida y no vacía
+- Sin espacios raros ni comillas mal cerradas en el `.env`
 
 ### Error de conexión a la base de datos
 
-- Verifica que PostgreSQL esté ejecutándose
-- Confirma que las credenciales en `.env` sean correctas
-- Verifica que la base de datos exista
-- Revisa que el puerto no esté bloqueado por firewall
+- Que `DATABASE_URL` sea la del **pooler** y la de migraciones/seed sea **`DATABASE_URL_UNPOOLED`** (host directo Neon)
+- Que la cadena incluya lo que pida el proveedor (`sslmode=require`, etc.)
+- Reglas de red en Neon (IPs permitidas) si las activaste
+- Si migraciones fallan solo contra el pooler, casi siempre falta o está mal `DATABASE_URL_UNPOOLED`
 
 ### El servidor no inicia
 
